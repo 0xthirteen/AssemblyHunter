@@ -28,11 +28,12 @@ Find assemblies on a host that can be useful for payloads or post ex.
 path, file, collection, services, tasks, or autoruns should indicate the type of search performed, all other options narrow down the search
 
 #### Examples: 
-AssemblyHunter.exe path=C:\ recurse=true signed=true
-AssemblyHunter.exe path=C:\Users\Admin\Downloads recurse=true clickonce=true
-AssemblyHunter.exe services=true signed=true
-AssemblyHunter.exe tasks=true signed=true getarch=true
-AssemblyHunter file=C:\Users\admin\elevate.exe getarch=true
+##### AssemblyHunter.exe path=C:\ recurse=true signed=true
+##### AssemblyHunter.exe path=C:\Users\Admin\Downloads recurse=true clickonce=true
+##### AssemblyHunter.exe services=true signed=true
+##### AssemblyHunter.exe tasks=true signed=true getarch=true
+##### AssemblyHunter file=C:\Users\admin\elevate.exe getarch=true
 
-##### Credit
+#### Credit
 GetPEFileManifest from Kerem Guemruekcue
+
