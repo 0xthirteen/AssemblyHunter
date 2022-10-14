@@ -1,5 +1,8 @@
-# AssemblyHunter.exe
-Find assemblies on a host that can be useful for payloads or post ex.
+# AssemblyHunter
+Tool released in combination with the [Less SmartScreen More Caffeine: ClickOnce (Ab)Use for Trusted Code Execution](https://media.defcon.org/DEF%20CON%2030/DEF%20CON%2030%20video%20and%20slides/DEF%20CON%2030%20-%20Nick%20Powers%2C%20Steven%20Flores%20-%20Less%20SmartScreen%20More%20Caffeine%20-%20ClickOnce%20AbUse%20for%20Trusted%20Code%20Execution.mp4)  conference presentation by [zyn3rgy](https://twitter.com/zyn3rgy) and myself.
+
+
+Find assemblies on hosts that can be useful for payloads or post ex. No pre-built assemblies will be provided, open project, select release and build. Build for .Net Framework 4.0+ (some assemblies are not identified correctly less than 4.0)
 
 ##  Core Options:
 *    path         (ex: path=C:\Users)           full path to search
