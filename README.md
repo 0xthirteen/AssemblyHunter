@@ -10,21 +10,23 @@ Find assemblies on hosts that can be useful for payloads or post ex. No pre-buil
 *    collection   (ex: collection=C:\files.txt) check a list of assemblies from a file
 *    services     (ex: services=true)           check all services binpaths for any assemblies
 *    tasks        (ex: tasks=true)              check if any exec action tasks are assemblies
-*    autoruns     (ex: autoruns=true)           enumerates common autorun locations for assemblies
+*    autoruns     (ex: autoruns=true)           enumerates common autorun locations for assemblies (NOT IMPLEMENTED)
 
 ## Optional
 *    recurse          (ex: recurse=true)          recurse the path given
 *    allpaths         (ex: allpaths=true)         recurses all directores, by default some directores with common Microsoft assemblies are skipped
 *    exeonly          (ex: exeonly=true)          return exes only
+*    signed           (ex: signed=true)           return signed only; prints cert issuer/subject
+*    quiet            (ex: quiet=true)            suppress "Skipping directory" messages
 *    getarch          (ex: getarch=true)          get assembly architecture
-*    servicename      (ex: services=true)         check a specific service (needs services run)
-*    isservice        (ex: iservice=true)         checks if assembly is a service executable
+*    servicename      (ex: servicename=Spooler)   check a specific service (needs services run)
+*    isservice        (ex: isservice=true)        checks if assembly is a service executable
 *    getuac           (ex: getuac=true)           gets UAC settings of assembly
 *    getrefs          (ex: getrefs=true)          gets references used by assembly
 *    getasmid         (ex: getasmid=true)         gets internal assembly manifest identity");
 *    getappid         (ex: getappid=true)         gets internal application manifest identity");
 *    getappmanifest   (ex: getappmanifest=true)   gets internal application manifest");
-*    getasmmanifest   (ex: getasmmanifest=true)   gets internal assembly manifest");
+*    getasmmanifest   (ex: getasmmanifest=true)   gets internal assembly manifest (NOT IMPLEMENTED)
 *    clickonce        (ex: clickonce=true)        returns assemblies that can be deployed via clickonce
 *    electron         (ex: electron=true)         finds electron apps instead of assemblies
 
