@@ -45,7 +45,6 @@ namespace AssemblyHunter
             bool quiet = false;
             bool allpaths = false;
             bool electron = false;
-            string electbs = "4D-5A-78-00-01-00-00-00-04-00-00-00-00-00-00-00";
 
             if (arguments.ContainsKey("electron") && arguments["electron"].ToString().ToLower() == "true")
             {
@@ -69,17 +68,9 @@ namespace AssemblyHunter
                     {
                         if(electron == true)
                         {
-                            byte[] sixteen = new byte[16];
-                            string hex = string.Empty;
-                            using (BinaryReader reader = new BinaryReader(new FileStream(path, FileMode.Open)))
+                            if (IsElectronApp(path, out string asar))
                             {
-                                reader.BaseStream.Seek(0, SeekOrigin.Begin);
-                                reader.Read(sixteen, 0, 16);
-                                hex = BitConverter.ToString(sixteen);
-                                if(electbs == hex)
-                                {
-                                    ElectronChecks(path, arguments);
-                                }
+                                ElectronChecks(path, arguments, asar);
                             }
                         }
                         else
@@ -87,7 +78,7 @@ namespace AssemblyHunter
                             AssemblyName assemblyName = AssemblyName.GetAssemblyName(path);
                             AssemblyChecks(path, arguments);
                         }
-                        
+
                     }
                     catch { }
 
@@ -103,17 +94,9 @@ namespace AssemblyHunter
                             {
                                 if (electron == true)
                                 {
-                                    byte[] sixteen = new byte[16];
-                                    string hex = string.Empty;
-                                    using (BinaryReader reader = new BinaryReader(new FileStream(f, FileMode.Open)))
+                                    if (IsElectronApp(f, out string asar))
                                     {
-                                        reader.BaseStream.Seek(0, SeekOrigin.Begin);
-                                        var x = reader.Read(sixteen, 0, 16);
-                                        hex = BitConverter.ToString(sixteen);
-                                        if (electbs == hex)
-                                        {
-                                            ElectronChecks(f, arguments);
-                                        }
+                                        ElectronChecks(f, arguments, asar);
                                     }
                                 }
                                 else
@@ -134,17 +117,9 @@ namespace AssemblyHunter
                             {
                                 if (electron == true)
                                 {
-                                    byte[] sixteen = new byte[16];
-                                    string hex = string.Empty;
-                                    using (BinaryReader reader = new BinaryReader(new FileStream(f, FileMode.Open)))
+                                    if (IsElectronApp(f, out string asar))
                                     {
-                                        reader.BaseStream.Seek(0, SeekOrigin.Begin);
-                                        var x = reader.Read(sixteen, 0, 16);
-                                        hex = BitConverter.ToString(sixteen);
-                                        if (electbs == hex)
-                                        {
-                                            ElectronChecks(f, arguments);
-                                        }
+                                        ElectronChecks(f, arguments, asar);
                                     }
                                 }
                                 else
@@ -175,17 +150,9 @@ namespace AssemblyHunter
                     {
                         if (electron == true)
                         {
-                            byte[] sixteen = new byte[16];
-                            string hex = string.Empty;
-                            using (BinaryReader reader = new BinaryReader(new FileStream(file, FileMode.Open)))
+                            if (IsElectronApp(file, out string asar))
                             {
-                                reader.BaseStream.Seek(0, SeekOrigin.Begin);
-                                var x = reader.Read(sixteen, 0, 16);
-                                hex = BitConverter.ToString(sixteen);
-                                if (electbs == hex)
-                                {
-                                    ElectronChecks(file, arguments);
-                                }
+                                ElectronChecks(file, arguments, asar);
                             }
                         }
                         else
@@ -214,17 +181,9 @@ namespace AssemblyHunter
                         {
                             if (electron == true)
                             {
-                                byte[] sixteen = new byte[16];
-                                string hex = string.Empty;
-                                using (BinaryReader reader = new BinaryReader(new FileStream(line, FileMode.Open)))
+                                if (IsElectronApp(line, out string asar))
                                 {
-                                    reader.BaseStream.Seek(0, SeekOrigin.Begin);
-                                    var x = reader.Read(sixteen, 0, 16);
-                                    hex = BitConverter.ToString(sixteen);
-                                    if (electbs == hex)
-                                    {
-                                        ElectronChecks(line, arguments);
-                                    }
+                                    ElectronChecks(line, arguments, asar);
                                 }
                             }
                             else
@@ -396,17 +355,9 @@ namespace AssemblyHunter
 
                                 if (electron == true)
                                 {
-                                    byte[] sixteen = new byte[16];
-                                    string hex = string.Empty;
-                                    using (BinaryReader reader = new BinaryReader(new FileStream(fullpath, FileMode.Open)))
+                                    if (IsElectronApp(fullpath, out string asar))
                                     {
-                                        reader.BaseStream.Seek(0, SeekOrigin.Begin);
-                                        var x = reader.Read(sixteen, 0, 16);
-                                        hex = BitConverter.ToString(sixteen);
-                                        if (electbs == hex)
-                                        {
-                                            ElectronChecks(fullpath, arguments);
-                                        }
+                                        ElectronChecks(fullpath, arguments, asar, taskname, "tasks");
                                     }
                                 }
                                 else
@@ -629,7 +580,182 @@ namespace AssemblyHunter
             return files;
         }
 
-        static void ElectronChecks(string path, Dictionary<string, string> arguments, string auxname = null, string runt = null)
+        // True if `exePath` is the launcher of an Electron app, identified by either of the two
+        // definitive signals next to it: a valid packed resources\app.asar, or an unpacked
+        // resources\app\package.json. Sets asarPath when the packed archive is present.
+        static bool IsElectronApp(string exePath, out string evidence)
+        {
+            evidence = null;
+            try
+            {
+                if (Path.GetExtension(exePath).ToLower() != ".exe")
+                    return false;
+
+                string dir = Path.GetDirectoryName(exePath);
+                if (string.IsNullOrEmpty(dir))
+                    return false;
+
+                string ev = null;
+                string packed = Path.Combine(dir, "resources", "app.asar");
+                if (File.Exists(packed) && IsValidAsar(packed))
+                {
+                    ev = packed;
+                }
+                else
+                {
+                    string unpacked = Path.Combine(dir, "resources", "app", "package.json");
+                    if (File.Exists(unpacked))
+                    {
+                        ev = unpacked;
+                    }
+                }
+                if (ev == null)
+                    return false;
+
+                // The directory says "an Electron app lives here"; confirm THIS exe is the launcher
+                // and not a co-located helper (Squirrel updater, NSIS uninstaller) by requiring it to
+                // statically import the Chromium runtime. Done last so the PE walk only runs on exes
+                // already sitting next to a valid app.asar / package.json.
+                if (!ImportsChromiumRuntime(exePath))
+                    return false;
+
+                evidence = ev;
+                return true;
+            }
+            catch { return false; }
+        }
+
+        // Confirm a file is really an ASAR archive: 16 bytes of Pickle framing, then the JSON
+        // header, which always begins with {"files":. Guards against name-only false positives.
+        static bool IsValidAsar(string path)
+        {
+            try
+            {
+                using (BinaryReader reader = new BinaryReader(File.OpenRead(path)))
+                {
+                    reader.BaseStream.Seek(16, SeekOrigin.Begin);
+                    byte[] buf = new byte[8];
+                    int n = reader.Read(buf, 0, buf.Length);
+                    return System.Text.Encoding.ASCII.GetString(buf, 0, n).StartsWith("{\"files\"");
+                }
+            }
+            catch { return false; }
+        }
+
+        // True if the exe imports a Chromium/Electron runtime DLL. The real launcher pulls in
+        // ffmpeg.dll (and friends); Squirrel updaters and NSIS uninstallers that share the app folder
+        // do not. These DLLs are usually delay-loaded, so both the standard (dir 1) and delay-load
+        // (dir 13) import directories are scanned. Reads only the bytes it needs, so it is cheap even
+        // on 200 MB+ launchers.
+        static bool ImportsChromiumRuntime(string exePath)
+        {
+            string[] markers = { "ffmpeg.dll", "libglesv2.dll", "libegl.dll", "d3dcompiler_47.dll" };
+            try
+            {
+                using (FileStream fs = File.OpenRead(exePath))
+                {
+                    byte[] buf = new byte[24];
+                    ReadAt(fs, 0x3C, buf, 4);
+                    int peOff = BitConverter.ToInt32(buf, 0);
+
+                    ReadAt(fs, peOff, buf, 24);                       // PE signature (4) + COFF header (20)
+                    if (buf[0] != 'P' || buf[1] != 'E')
+                        return false;
+                    ushort numSections = BitConverter.ToUInt16(buf, 6);
+                    ushort optSize = BitConverter.ToUInt16(buf, 20);
+
+                    int optOff = peOff + 24;
+                    byte[] opt = new byte[optSize];
+                    ReadAt(fs, optOff, opt, optSize);
+                    ushort magic = BitConverter.ToUInt16(opt, 0);     // 0x10b = PE32, 0x20b = PE32+
+                    int dirStart = (magic == 0x20b) ? 112 : 96;
+
+                    byte[] secBuf = new byte[numSections * 40];
+                    ReadAt(fs, optOff + optSize, secBuf, secBuf.Length);
+                    int[,] sec = new int[numSections, 3];             // [i] = { VirtualAddress, spannedSize, rawPtr }
+                    for (int i = 0; i < numSections; i++)
+                    {
+                        int s = i * 40;
+                        int vsize = BitConverter.ToInt32(secBuf, s + 8);
+                        int rsize = BitConverter.ToInt32(secBuf, s + 16);
+                        sec[i, 0] = BitConverter.ToInt32(secBuf, s + 12);
+                        sec[i, 1] = (vsize > rsize) ? vsize : rsize;
+                        sec[i, 2] = BitConverter.ToInt32(secBuf, s + 20);
+                    }
+
+                    // { data-directory index, descriptor size, offset of the DLL-name RVA within it }
+                    int[,] tables = { { 1, 20, 12 }, { 13, 32, 4 } };
+                    byte[] desc = new byte[32];
+                    for (int t = 0; t <= tables.GetUpperBound(0); t++)
+                    {
+                        int dirRva = BitConverter.ToInt32(opt, dirStart + tables[t, 0] * 8);
+                        if (dirRva == 0)
+                            continue;
+                        int off = RvaToOffset(dirRva, sec, numSections);
+                        if (off < 0)
+                            continue;
+
+                        int descSize = tables[t, 1];
+                        int nameField = tables[t, 2];
+                        for (int guard = 0; guard < 8192; guard++, off += descSize)
+                        {
+                            ReadAt(fs, off, desc, descSize);
+                            int nameRva = BitConverter.ToInt32(desc, nameField);
+                            if (nameRva == 0)
+                                break;                                // null terminator descriptor
+
+                            int nameOff = RvaToOffset(nameRva, sec, numSections);
+                            if (nameOff < 0)
+                                continue;
+
+                            string dll = ReadAsciiZ(fs, nameOff).ToLower();
+                            foreach (string m in markers)
+                                if (dll == m)
+                                    return true;
+                        }
+                    }
+                    return false;
+                }
+            }
+            catch { return false; }
+        }
+
+        // Map a PE relative virtual address to a file offset using the section table.
+        static int RvaToOffset(int rva, int[,] sec, int n)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                int va = sec[i, 0];
+                if (rva >= va && rva < va + sec[i, 1])
+                    return sec[i, 2] + (rva - va);
+            }
+            return -1;
+        }
+
+        static void ReadAt(FileStream fs, long offset, byte[] buf, int count)
+        {
+            fs.Seek(offset, SeekOrigin.Begin);
+            int read = 0;
+            while (read < count)
+            {
+                int n = fs.Read(buf, read, count - read);
+                if (n <= 0)
+                    throw new EndOfStreamException();
+                read += n;
+            }
+        }
+
+        static string ReadAsciiZ(FileStream fs, long offset)
+        {
+            fs.Seek(offset, SeekOrigin.Begin);
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            int c;
+            while ((c = fs.ReadByte()) > 0)
+                sb.Append((char)c);
+            return sb.ToString();
+        }
+
+        static void ElectronChecks(string path, Dictionary<string, string> arguments, string evidence = null, string auxname = null, string runt = null)
         {
             string targetapp = path;
             bool signed = false;
@@ -662,6 +788,12 @@ namespace AssemblyHunter
 
 
             Console.WriteLine("[+] Found electron app: {0}", targetapp);
+
+            if (evidence != null)
+            {
+                string label = evidence.ToLower().EndsWith(".asar") ? "app.asar" : "package.json";
+                Console.WriteLine("    [+] {0}: {1}", label, evidence);
+            }
 
             if (runt == "services")
             {
